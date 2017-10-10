@@ -20,7 +20,7 @@ import de.micromata.opengis.kml.v_2_2_0.SimpleData;
 import utils.NameSpaceBeautyfier;
 
 public class IDManager implements KmlParseProgressListener{
-	private long maxId;
+	private long maxId = -1;
 	private List<SimpleData> noIDplacemarks = new ArrayList<>();
 	
 	private Kml kml;
@@ -33,20 +33,14 @@ public class IDManager implements KmlParseProgressListener{
 	
 	@Override
 	public void onPreParse(int progressTotal) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void onParseProgress(int progress) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void onParseFolder(Folder folder) {
-		// TODO Auto-generated method stub
-		
 	}
 	
 	private List<SchemaData> getSchemaData(ExtendedData extData){
