@@ -60,34 +60,34 @@ public class IDManager implements KmlParseProgressListener{
 		
 		return schDataList;
 	}
-	
+
 	private SimpleData getIDField(List<SchemaData> schemaData){
 		List<SimpleData> simpleDataList = schemaData.get(0).getSimpleData();
 		SimpleData sData = simpleDataList.stream()
 			.filter(sd -> "ID".equals(sd.getName()))
 			.findFirst().orElse(null);
-		
+
 		if(sData == null){
 			sData = new SimpleData("ID");
 			simpleDataList.add(sData);
 		}
-		
+
 		return sData;
 	}
 
 	@Override
 	public void onParsePlacemark(Placemark p) {
 		ExtendedData extData = p.getExtendedData();
-		
+
 		if(extData == null){
 			extData = new ExtendedData();
 			p.setExtendedData(extData);
 		}
-		
+
 		List<SchemaData> schemaData = getSchemaData(extData);
 		SimpleData idField = getIDField(schemaData);
 		String id = idField.getValue();
-				
+
 		if(id == null){
 			noIDplacemarks.add(idField);
 		}else{
