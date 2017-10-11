@@ -98,6 +98,7 @@ public class TrailIDManager implements KmlParseProgressListener{
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void onParseFinish(boolean altitudeWasDownloaded) {
         try {
@@ -105,12 +106,12 @@ public class TrailIDManager implements KmlParseProgressListener{
     		String name = kml.getClass().getSimpleName();
             if ("Kml".equals(name))
                 name = name.toLowerCase();
-            
+         
             JAXBContext jaxbContext = JAXBContext.newInstance(Kml.class);
             Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
             jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            jaxbMarshaller.setProperty("com.sun.xml.bind.namespacePrefixMapper", new NameSpaceBeautyfier());
+            //jaxbMarshaller.setProperty("com.sun.xml.bind.namespacePrefixMapper", new NameSpaceBeautyfier());
             JAXBElement<Kml> jaxbKml = new JAXBElement(new QName("http://www.opengis.net/kml/2.2", name), (Class<Kml>) kml.getClass(), kml);
 			jaxbMarshaller.marshal(jaxbKml, kmlFile);
 		} catch (JAXBException e) {

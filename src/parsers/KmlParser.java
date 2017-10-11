@@ -17,6 +17,7 @@ import models.ConservationUnit;
 import models.TPLocation;
 import models.TrailType;
 import utils.ConverterUtils;
+import utils.KMLUtils;
 
 public class KmlParser {
 	private static long count = 0;
@@ -116,7 +117,7 @@ public class KmlParser {
 		
 		loc = ConverterUtils.coordinateToTPLocation(coord);
 
-		loc.setId(count);
+		loc.setId(KMLUtils.getIDFromPlacemarck(p));
 		loc.setName(p.getName());
 
 		if(listener != null)
@@ -153,7 +154,7 @@ public class KmlParser {
 		else
 			return null;
 
-		loc.setId(count);
+		loc.setId(KMLUtils.getIDFromPlacemarck(p));
 		loc.setName(p.getName());
 
 		if(listener != null)

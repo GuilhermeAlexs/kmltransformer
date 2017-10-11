@@ -43,13 +43,13 @@ public class Main {
 		if(file != null){
 			Kml kml = Kml.unmarshal(KMLUtils.openKml(file));
     	    
-    	    if("trails".equals(strType))
+    	    if("-trail".equals(strType))
     	    	KmlParser.parseKml(kml, new TrailsParserWithUCS(strOutputName));
-    	    else if("cities".equals(strType))
+    	    else if("-city".equals(strType))
     	    	KmlParser.parseKml(kml, new CitiesParser(strOutputName));
-    	    else if("ucs".equals(strType))
+    	    else if("-uc".equals(strType))
     	    	KmlParser.parseKml(kml, new UCSParser(strOutputName));
-    	    else if("caves".equals(strType))
+    	    else if("-cave".equals(strType))
     	    	KmlParser.parseKml(kml, new CaveParserWithUCS(strOutputName));
 		}
 	}

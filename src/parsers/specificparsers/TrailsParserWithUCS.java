@@ -99,6 +99,7 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 		private TPLocation getLocWithUC(TPLocation loc){
 			String ucName = finalUCList
 					.stream    ()
+					.parallel()
 					.filter    (uc -> isInside(uc,loc))
 					.map	   (uc -> uc.getName())
 					.findFirst ()
@@ -110,8 +111,8 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 		}
 
 		private void printToFile(PrintWriter writer, TPLocation loc){
-			writer.println(loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
-					"$" + loc.getUc() + "$" + loc.getType().getValue() + "$" + "1");
+			writer.println(loc.getId() + "$" + loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
+					"$" + loc.getUc() + "$" + loc.getType().getValue() + "$" + "3");
 		}
 
 		@Override
@@ -120,6 +121,7 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 				PrintWriter writer = new PrintWriter(outputName, "UTF-8");
 
 				locs.stream  ()
+					.parallel()
 					.map	 (loc -> getLocWithUC(loc))
 					.forEach (loc -> printToFile(writer, loc));
 

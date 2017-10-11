@@ -16,6 +16,8 @@ import de.micromata.opengis.kml.v_2_2_0.Kml;
 import de.micromata.opengis.kml.v_2_2_0.Placemark;
 import models.ConservationUnit;
 import models.TPLocation;
+import models.TrailEnvironment;
+import models.TrailType;
 import parsers.KmlParseProgressListener;
 import parsers.KmlParser;
 
@@ -49,7 +51,7 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 
 			if(loc != null && loc.getName() != null){
 				locs.add(loc);
-				System.out.println(loc.getName() + " , " + loc.getLatitude() + " , " + loc.getLongitude());
+				System.out.println(loc.getName());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -89,29 +91,44 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 						e.printStackTrace();
 					}
 				}
+				
+				private boolean isInside(ConservationUnit uc, TPLocation loc){
+					return uc.getPolygon().contains(new Point(loc.getLatitude(), loc.getLongitude()));
+				}
+
+				private TPLocation getLocWithUC(TPLocation loc){
+					String ucName = finalUCList
+							.stream    ()
+							.parallel()
+							.filter    (uc -> isInside(uc,loc))
+							.map	   (uc -> uc.getName())
+							.findFirst ()
+							.orElse    (null);
+
+					loc.setUc(ucName);
+
+					return loc;
+				}
+
+				private void printToFile(PrintWriter writer, TPLocation loc){
+					writer.println(loc.getId() + "$" + loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
+							"$" + loc.getUc() + "$" + TrailType.WELL_KNOWN.getValue() + "$" + TrailEnvironment.CAVE.getValue());
+				}
 
 				@Override
 				public void onParseFinish(boolean altitudeWasDownloaded) {
 					try {
-						  for(TPLocation loc: locs){
-								for(ConservationUnit uc: finalUCList){
-									if(uc.getPolygon().contains(new Point(loc.getLatitude(), loc.getLongitude()))){
-										loc.setUc(uc.getName());
-										break;
-									}
-								}
-						  }
-
-						  PrintWriter writer = new PrintWriter(outputName, "UTF-8");
-
-						  for(TPLocation loc: locs){
-							  writer.println(loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + "$" + loc.getUc() + "$" + "null" + "$" + "3");
-						  }
+						 PrintWriter writer = new PrintWriter(outputName, "UTF-8");
+						 
+						 locs.stream  ()
+							.parallel()
+							.map	 (loc -> getLocWithUC(loc))
+							.forEach (loc -> printToFile(writer, loc));
 
 						  writer.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}	
+					} catch (IOException e) {
+						e.printStackTrace();
+					}	
 				}
 			});
 		

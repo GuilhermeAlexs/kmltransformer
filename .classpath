@@ -2,13 +2,13 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace eclipse/KMLTransformer/kmltransformer/libs/commons-io-2.5.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace eclipse/KMLTransformer/kmltransformer/libs/geohash-1.3.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace eclipse/KMLTransformer/kmltransformer/libs/jackson-annotations-2.8.9.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace eclipse/KMLTransformer/kmltransformer/libs/jackson-core-2.8.8.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace eclipse/KMLTransformer/kmltransformer/libs/jackson-databind-2.8.9.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace eclipse/KMLTransformer/kmltransformer/libs/JavaAPIforKml-2.2.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace eclipse/KMLTransformer/kmltransformer/libs/polygon-1.0.2.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace eclipse/jaxb-impl-2.2.jar"/>
+	<classpathentry kind="lib" path="/home/guilherme/workspace 2/KMLTransformer/libs/polygon-1.0.2.jar"/>
+	<classpathentry kind="lib" path="/home/guilherme/workspace 2/KMLTransformer/libs/JavaAPIforKml-2.2.1.jar"/>
+	<classpathentry kind="lib" path="/home/guilherme/workspace 2/KMLTransformer/libs/jackson-databind-2.8.9.jar"/>
+	<classpathentry kind="lib" path="/home/guilherme/workspace 2/KMLTransformer/libs/jackson-core-2.8.8.jar"/>
+	<classpathentry kind="lib" path="/home/guilherme/workspace 2/KMLTransformer/libs/jackson-annotations-2.8.9.jar"/>
+	<classpathentry kind="lib" path="/home/guilherme/workspace 2/KMLTransformer/libs/geohash-1.3.0.jar"/>
+	<classpathentry kind="lib" path="/home/guilherme/workspace 2/KMLTransformer/libs/commons-io-2.5.jar"/>
+	<classpathentry kind="lib" path="/home/guilherme/workspace 2/KMLTransformer/libs/JAXBNamespacePrefixMapper-2.2.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
