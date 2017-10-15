@@ -13,6 +13,7 @@ import de.micromata.opengis.kml.v_2_2_0.Kml;
 import de.micromata.opengis.kml.v_2_2_0.Placemark;
 import models.ConservationUnit;
 import models.TPLocation;
+import models.TrailEnvironment;
 import parsers.KmlParseProgressListener;
 import parsers.KmlParser;
 import utils.KMLUtils;
@@ -112,8 +113,8 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 
 		private void printToFile(PrintWriter writer, TPLocation loc){
 			writer.println(loc.getId() + "$" + loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
-					"$" + loc.getUc() + "$" + loc.getType().getValue() + "$" + "3");
-		}
+					"$" + loc.getUc() + "$" + loc.getType().getValue() + "$" + TrailEnvironment.WATERFALL.getValue());
+		}		
 
 		@Override
 		public void onParseFinish(boolean altitudeWasDownloaded) {

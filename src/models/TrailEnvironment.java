@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 
 public enum TrailEnvironment {
-    WATERFALL(0), MOUNTAIN(1), CAVE(3);
+    WATERFALL(1), MOUNTAIN(2), CAVE(3);
 
     @JsonProperty
     private int value;
