@@ -1,6 +1,7 @@
 package models;
 
 public class City {
+	private String id;
 	private String name;
 	private String uf;
 	private String latitude;
@@ -15,6 +16,14 @@ public class City {
 		this.uf = uf;
 	}
 	
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
 	public String getName() {
 		return name;
 	}

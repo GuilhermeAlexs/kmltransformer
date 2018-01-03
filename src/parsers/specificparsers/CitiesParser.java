@@ -35,6 +35,10 @@ public class CitiesParser implements KmlParseProgressListener {
 	public void onParseFolder(Folder folder) {
 		System.out.println("Parsing Folder: " + folder.getName());
 	}
+	
+	public List<City> getCities(){
+		return cities;
+	}
 
 	@Override
 	public void onParsePlacemark(Placemark p) {

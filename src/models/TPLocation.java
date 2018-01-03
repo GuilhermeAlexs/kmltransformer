@@ -28,7 +28,9 @@ public class TPLocation implements Serializable{
 	private double nearDistance;
 	@JsonIgnore
 	private List<City> nearestCities;
-
+	@JsonIgnore
+	private String nearestCityId;
+	
 	public TPLocation() {
 		super();
 	}
@@ -133,4 +135,14 @@ public class TPLocation implements Serializable{
 	public void setEnvironment(TrailEnvironment environment) {
 		this.environment = environment;
 	}
+
+	public String getNearestCityId() {
+		return nearestCityId;
+	}
+
+	public void setNearestCityId(String nearestCityId) {
+		this.nearestCityId = nearestCityId;
+	}
+	
+	
 }

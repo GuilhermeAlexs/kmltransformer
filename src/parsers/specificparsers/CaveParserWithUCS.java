@@ -4,8 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 
@@ -14,6 +17,7 @@ import com.snatik.polygon.Point;
 import de.micromata.opengis.kml.v_2_2_0.Folder;
 import de.micromata.opengis.kml.v_2_2_0.Kml;
 import de.micromata.opengis.kml.v_2_2_0.Placemark;
+import models.City;
 import models.ConservationUnit;
 import models.TPLocation;
 import models.TrailEnvironment;
@@ -96,7 +100,7 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 					return uc.getPolygon().contains(new Point(loc.getLatitude(), loc.getLongitude()));
 				}
 
-				private TPLocation getLocWithUC(TPLocation loc){
+				private TPLocation getLocWithUC(List<City> cities, TPLocation loc){
 					String ucName = finalUCList
 							.stream    ()
 							.parallel()
@@ -106,23 +110,68 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 							.orElse    (null);
 
 					loc.setUc(ucName);
+					
+					double minD = Double.MAX_VALUE;
+					
+					for(City c: cities){
+						double d = (loc.getLatitude() - Double.parseDouble(c.getLatitude()))*(loc.getLatitude() - Double.parseDouble(c.getLatitude())) + 
+							       (loc.getLongitude() - Double.parseDouble(c.getLongitude()))*(loc.getLongitude() - Double.parseDouble(c.getLongitude()));
+						
+						System.out.println(c.getId() + "d=" + d + " minD=" + minD);
+						
+						if(d < minD){
+							minD = d;
+							loc.setNearestCityId(c.getId());
+						}
+					}
+
 
 					return loc;
 				}
 
 				private void printToFile(PrintWriter writer, TPLocation loc){
 					writer.println(loc.getId() + "$" + loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
-							"$" + loc.getUc() + "$" + TrailType.WELL_KNOWN.getValue() + "$" + TrailEnvironment.CAVE.getValue());
+							"$" + loc.getUc() + "$" + TrailType.WELL_KNOWN.getValue() + "$" + TrailEnvironment.CAVE.getValue() + "$" + loc.getNearestCityId());
 				}
 
+				private List<City> getCities(){
+					List<City> cities = new ArrayList<>();
+					boolean stop[] = new boolean[1];
+					stop[0] = false;
+					
+					try (Stream<String> stream = Files.lines(Paths.get("cities.csv"))) {
+						stream.forEach(line -> {
+							if(!stop[0]){
+								String f [] = line.split(";");
+								
+								City c = new City();
+								c.setId(f[0]);
+								c.setLongitude(f[3]);
+								c.setLatitude(f[4]);
+								
+								cities.add(c);
+			
+								if(f[0].equals("10078"))
+									stop[0] = true;
+							}
+						});
+
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					
+					return cities;
+				}
+				
 				@Override
 				public void onParseFinish(boolean altitudeWasDownloaded) {
 					try {
 						 PrintWriter writer = new PrintWriter(outputName, "UTF-8");
 						 
+						 List<City> cities = getCities();
+						 
 						 locs.stream  ()
-							.parallel()
-							.map	 (loc -> getLocWithUC(loc))
+							.map	 (loc -> getLocWithUC(cities, loc))
 							.forEach (loc -> printToFile(writer, loc));
 
 						  writer.close();
