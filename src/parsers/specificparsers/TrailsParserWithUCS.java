@@ -6,7 +6,6 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -21,6 +20,7 @@ import models.TPLocation;
 import models.TrailEnvironment;
 import parsers.KmlParseProgressListener;
 import parsers.KmlParser;
+import utils.GeoUtils;
 import utils.KMLUtils;
 
 public class TrailsParserWithUCS implements KmlParseProgressListener {
@@ -113,37 +113,49 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 
 			loc.setUc(ucName);
 
-			double minD = 100000000;
+			double minD = Double.MAX_VALUE;
 			
-			cities.stream().forEach(c -> {
-				double d = (loc.getLatitude() - Double.parseDouble(c.getLatitude()))*(loc.getLatitude() - Double.parseDouble(c.getLatitude())) + 
-						(loc.getLongitude() - Double.parseDouble(c.getLongitude()))*(loc.getLongitude() - Double.parseDouble(c.getLongitude()));
+			for(City c: cities){
+				double d = GeoUtils.computeDistance(loc.getLatitude(), loc.getLongitude(), 
+						Double.parseDouble(c.getLatitude()), Double.parseDouble(c.getLongitude()));
 				
-				if(d < minD)
+				if(d < minD){
+					minD = d;
 					loc.setNearestCityId(c.getId());
-			});
+					loc.setNearDistance(d);
+				}
+			}
 			
 			return loc;
 		}
 
 		private void printToFile(PrintWriter writer, TPLocation loc){
 			writer.println(loc.getId() + "$" + loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
-					"$" + loc.getUc() + "$" + loc.getType().getValue() + "$" + TrailEnvironment.WATERFALL.getValue() + "$" + loc.getNearestCityId());
+					"$" + loc.getUc() + "$" + loc.getType().getValue() + "$" + TrailEnvironment.WATERFALL.getValue() +
+					"$" + loc.getNearestCityId() + "$" + Math.round(loc.getNearDistance()));
 		}		
 
 		private List<City> getCities(){
 			List<City> cities = new ArrayList<>();
+			boolean stop[] = new boolean[1];
+			stop[0] = false;
 			
 			try (Stream<String> stream = Files.lines(Paths.get("cities.csv"))) {
 				stream.forEach(line -> {
-					String f [] = line.split(";");
-					
-					City c = new City();
-					c.setId(f[0]);
-					c.setLongitude(f[3]);
-					c.setLatitude(f[4]);
-					
-					cities.add(c);
+					if(!stop[0]){
+						String f [] = line.split(";");
+						
+						City c = new City();
+						c.setId(f[0]);
+						c.setName(f[1]);
+						c.setLatitude(f[3]);
+						c.setLongitude(f[4]);
+						
+						cities.add(c);
+	
+						if(f[0].equals("10078"))
+							stop[0] = true;
+					}
 				});
 
 			} catch (IOException e) {

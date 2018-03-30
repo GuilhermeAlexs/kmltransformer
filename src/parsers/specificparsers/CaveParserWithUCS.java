@@ -24,6 +24,7 @@ import models.TrailEnvironment;
 import models.TrailType;
 import parsers.KmlParseProgressListener;
 import parsers.KmlParser;
+import utils.GeoUtils;
 
 public class CaveParserWithUCS implements KmlParseProgressListener {
 	private List<TPLocation> locs;
@@ -64,7 +65,6 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 
 	@Override
 	public void onParseFinish(boolean altitudeWasDownloaded) {
-		
 		try {
 			File file = new File("ucs.kml");
 		    String str = FileUtils.readFileToString(file, "ISO-8859-1");
@@ -74,7 +74,6 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 	 	    List<ConservationUnit> finalUCList = new ArrayList<ConservationUnit>();
 	 	   
 			KmlParser.parseKml(kml, new KmlParseProgressListener(){
-
 				@Override
 				public void onPreParse(int progressTotal) {
 				}
@@ -114,24 +113,23 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 					double minD = Double.MAX_VALUE;
 					
 					for(City c: cities){
-						double d = (loc.getLatitude() - Double.parseDouble(c.getLatitude()))*(loc.getLatitude() - Double.parseDouble(c.getLatitude())) + 
-							       (loc.getLongitude() - Double.parseDouble(c.getLongitude()))*(loc.getLongitude() - Double.parseDouble(c.getLongitude()));
-						
-						System.out.println(c.getId() + "d=" + d + " minD=" + minD);
+						double d = GeoUtils.computeDistance(loc.getLatitude(), loc.getLongitude(), 
+								Double.parseDouble(c.getLatitude()), Double.parseDouble(c.getLongitude()));
 						
 						if(d < minD){
 							minD = d;
 							loc.setNearestCityId(c.getId());
+							loc.setNearDistance(d);
 						}
 					}
-
-
+					
 					return loc;
 				}
 
 				private void printToFile(PrintWriter writer, TPLocation loc){
 					writer.println(loc.getId() + "$" + loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
-							"$" + loc.getUc() + "$" + TrailType.WELL_KNOWN.getValue() + "$" + TrailEnvironment.CAVE.getValue() + "$" + loc.getNearestCityId());
+							"$" + loc.getUc() + "$" + TrailType.WELL_KNOWN.getValue() + "$" + TrailEnvironment.CAVE.getValue() +
+							"$" + loc.getNearestCityId() + "$" + Math.round(loc.getNearDistance()));
 				}
 
 				private List<City> getCities(){
@@ -146,8 +144,9 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 								
 								City c = new City();
 								c.setId(f[0]);
-								c.setLongitude(f[3]);
-								c.setLatitude(f[4]);
+								c.setName(f[1]);
+								c.setLatitude(f[3]);
+								c.setLongitude(f[4]);
 								
 								cities.add(c);
 			
