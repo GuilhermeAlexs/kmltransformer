@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -94,7 +95,7 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 						e.printStackTrace();
 					}
 				}
-				
+
 				private boolean isInside(ConservationUnit uc, TPLocation loc){
 					return uc.getPolygon().contains(new Point(loc.getLatitude(), loc.getLongitude()));
 				}
@@ -137,16 +138,15 @@ public class CaveParserWithUCS implements KmlParseProgressListener {
 					boolean stop[] = new boolean[1];
 					stop[0] = false;
 					
-					try (Stream<String> stream = Files.lines(Paths.get("cities.csv"))) {
+					try (Stream<String> stream = Files.lines(Paths.get("citiesv2.csv"))) {
 						stream.forEach(line -> {
 							if(!stop[0]){
-								String f [] = line.split(";");
-								
+								String f [] = line.split(",");
 								City c = new City();
 								c.setId(f[0]);
 								c.setName(f[1]);
-								c.setLatitude(f[3]);
-								c.setLongitude(f[4]);
+								c.setLatitude(f[4]);
+								c.setLongitude(f[5]);
 								
 								cities.add(c);
 			

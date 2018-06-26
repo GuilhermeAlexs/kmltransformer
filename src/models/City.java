@@ -6,6 +6,8 @@ public class City {
 	private String uf;
 	private String latitude;
 	private String longitude;
+	private String municipio;
+	private String category;
 	
 	public City() {
 	}
@@ -55,4 +57,22 @@ public class City {
 	public void setLongitude(String longitude) {
 		this.longitude = longitude;
 	}
+
+	public String getMunicipio() {
+		return municipio;
+	}
+
+	public void setMunicipio(String municipio) {
+		this.municipio = municipio;
+	}
+
+	public String getCategory() {
+		return category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
+	}
+	
+	
 }

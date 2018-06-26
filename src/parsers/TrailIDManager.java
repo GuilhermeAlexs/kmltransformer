@@ -114,6 +114,8 @@ public class TrailIDManager implements KmlParseProgressListener{
             //jaxbMarshaller.setProperty("com.sun.xml.bind.namespacePrefixMapper", new NameSpaceBeautyfier());
             JAXBElement<Kml> jaxbKml = new JAXBElement(new QName("http://www.opengis.net/kml/2.2", name), (Class<Kml>) kml.getClass(), kml);
 			jaxbMarshaller.marshal(jaxbKml, kmlFile);
+			
+			System.out.println("Conversão de ID's finalizada!");
 		} catch (JAXBException e) {
 			e.printStackTrace();
 		}

@@ -6,6 +6,7 @@ import parsers.KmlParser;
 import parsers.TrailIDManager;
 import parsers.specificparsers.CaveParserWithUCS;
 import parsers.specificparsers.CitiesParser;
+import parsers.specificparsers.SierraParserWithUCS2;
 import parsers.specificparsers.TrailsParserWithUCS;
 import parsers.specificparsers.UCSParser;
 import utils.KMLUtils;
@@ -51,6 +52,8 @@ public class Main {
     	    	KmlParser.parseKml(kml, new UCSParser(strOutputName));
     	    else if("-cave".equals(strType))
     	    	KmlParser.parseKml(kml, new CaveParserWithUCS(strOutputName));
+    	    else if("-sierra".equals(strType))
+    	    	KmlParser.parseKml(kml, new SierraParserWithUCS2(strOutputName));
 		}
 	}
 

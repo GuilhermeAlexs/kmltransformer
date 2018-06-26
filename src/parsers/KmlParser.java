@@ -9,11 +9,13 @@ import de.micromata.opengis.kml.v_2_2_0.Feature;
 import de.micromata.opengis.kml.v_2_2_0.Folder;
 import de.micromata.opengis.kml.v_2_2_0.Geometry;
 import de.micromata.opengis.kml.v_2_2_0.Kml;
+import de.micromata.opengis.kml.v_2_2_0.LineString;
 import de.micromata.opengis.kml.v_2_2_0.MultiGeometry;
 import de.micromata.opengis.kml.v_2_2_0.Placemark;
 import de.micromata.opengis.kml.v_2_2_0.Point;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import models.ConservationUnit;
+import models.River;
 import models.TPLocation;
 import models.TrailType;
 import utils.ConverterUtils;
@@ -71,25 +73,60 @@ public class KmlParser {
 		
 		return cUnit;
 	}
+	
+	public static River parseRiverFromLineString(String name, LineString lineString){
+		River r = new River();
+		r.setName(name);
+		
+		List<Coordinate> coords = lineString.getCoordinates();
+		
+		for(Coordinate c: coords){
+			TPLocation loc = ConverterUtils.coordinateToTPLocation(c);
+			r.addLocation(loc);
+		}
+				
+		return r;
+	}
 
-	public static List<ConservationUnit> parsePlacemarkUC(Placemark p, KmlParseProgressListener listener) throws Exception{
+	public static List<River> parsePlacemarkRiver(Placemark p, KmlParseProgressListener listener) throws Exception{
 		Geometry geometry = p.getGeometry();
-		List<ConservationUnit> ucs = new ArrayList<ConservationUnit>();
+		List<River> rivers = new ArrayList<>();
 		
 		if(geometry instanceof MultiGeometry){
 			MultiGeometry mGeo = (MultiGeometry) p.getGeometry();
 			List<Geometry> listGeometries = mGeo.getGeometry();
 			
 			for(Geometry g: listGeometries){
-				ucs.add(parseUCFromPolygon(p.getName(), (Polygon) g));
+				rivers.add(parseRiverFromLineString(p.getName(), (LineString) g));
 			}
 		}else if(geometry instanceof Polygon){
-			ucs.add(parseUCFromPolygon(p.getName(), (Polygon) geometry));
+			rivers.add(parseRiverFromLineString(p.getName(), (LineString) geometry));
 		}
 		
 		if(listener != null)
 			listener.onParseProgress((int) count);
 		
+		return rivers;
+	}
+	
+	public static List<ConservationUnit> parsePlacemarkUC(Placemark p, KmlParseProgressListener listener) throws Exception{
+		Geometry geometry = p.getGeometry();
+		List<ConservationUnit> ucs = new ArrayList<ConservationUnit>();
+
+		if(geometry instanceof MultiGeometry){
+			MultiGeometry mGeo = (MultiGeometry) p.getGeometry();
+			List<Geometry> listGeometries = mGeo.getGeometry();
+
+			for(Geometry g: listGeometries){
+				ucs.add(parseUCFromPolygon(p.getName(), (Polygon) g));
+			}
+		}else if(geometry instanceof Polygon){
+			ucs.add(parseUCFromPolygon(p.getName(), (Polygon) geometry));
+		}
+
+		if(listener != null)
+			listener.onParseProgress((int) count);
+
 		return ucs;
 	}
 	
@@ -98,6 +135,35 @@ public class KmlParser {
 		if(!(strToCompare.contains("CAVERNA") || strToCompare.contains("GRUTA") || strToCompare.contains("ABISMO")))
 			return null;
 		
+		Geometry geometry = p.getGeometry();
+		List<Coordinate> coords = new ArrayList<Coordinate>();
+		TPLocation loc = new TPLocation();
+		Point point = null;
+		
+		
+		if(geometry instanceof Point){
+			point = (Point) p.getGeometry();
+			coords.addAll(point.getCoordinates());
+		}else{
+			return loc;
+		}
+
+		count++;
+		
+		Coordinate coord = coords.get(0);
+		
+		loc = ConverterUtils.coordinateToTPLocation(coord);
+
+		loc.setId(KMLUtils.getIDFromPlacemarck(p));
+		loc.setName(p.getName());
+
+		if(listener != null)
+			listener.onParseProgress((int) count);
+		
+		return loc;
+	}
+	
+	public static TPLocation parsePlacemarkSierras(Placemark p, KmlParseProgressListener listener) throws Exception{
 		Geometry geometry = p.getGeometry();
 		List<Coordinate> coords = new ArrayList<Coordinate>();
 		TPLocation loc = new TPLocation();

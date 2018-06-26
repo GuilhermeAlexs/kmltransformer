@@ -18,8 +18,10 @@ import models.City;
 import models.ConservationUnit;
 import models.TPLocation;
 import models.TrailEnvironment;
+import models.TrailType;
 import parsers.KmlParseProgressListener;
 import parsers.KmlParser;
+import utils.ConverterUtils;
 import utils.GeoUtils;
 import utils.KMLUtils;
 
@@ -51,7 +53,10 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 	public void onParsePlacemark(Placemark p) {
 		try {
 			TPLocation loc = KmlParser.parsePlacemark(p, this);
-
+			
+			if(loc.getLatitude() == 0 && loc.getLongitude() == 0)
+				return;
+				
 			if(loc != null && loc.getName() != null){
 				locs.add(loc);
 				nEntries++;
@@ -123,6 +128,11 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 					minD = d;
 					loc.setNearestCityId(c.getId());
 					loc.setNearDistance(d);
+					
+					if(loc.getType() == TrailType.UNKNOWN){
+						String explName = ConverterUtils.toShortUFName(c.getUf()) + loc.getId();
+						loc.setName(explName);
+					}
 				}
 			}
 			
@@ -140,21 +150,22 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 			boolean stop[] = new boolean[1];
 			stop[0] = false;
 			
-			try (Stream<String> stream = Files.lines(Paths.get("cities.csv"))) {
+			try (Stream<String> stream = Files.lines(Paths.get("citiesV2.csv"))) {
 				stream.forEach(line -> {
 					if(!stop[0]){
-						String f [] = line.split(";");
+						String f [] = line.split(",");
 						
 						City c = new City();
 						c.setId(f[0]);
 						c.setName(f[1]);
-						c.setLatitude(f[3]);
-						c.setLongitude(f[4]);
+						c.setUf(f[2]);
+						c.setLatitude(f[4]);
+						c.setLongitude(f[5]);
 						
 						cities.add(c);
 	
-						if(f[0].equals("10078"))
-							stop[0] = true;
+						/*if(f[0].equals("10078"))
+							stop[0] = true;*/
 					}
 				});
 

@@ -52,21 +52,25 @@ public class CitiesParser implements KmlParseProgressListener {
 			while(it.hasNext()){
 				SimpleData data = it.next();
 				String dataName = data.getName();
-				
+			
 				if("NM_UF".equals(dataName)){
 					c.setUf(data.getValue());
 				}else if("NM_LOCALIDADE".equals(dataName)){
 					c.setName(data.getValue());
+				}else if("NM_MUNICIPIO".equals(dataName)){
+					c.setMunicipio(data.getValue());
 				}else if("LONG".equals(dataName)){
 					c.setLongitude(data.getValue());
 				}else if("LAT".equals(dataName)){
 					c.setLatitude(data.getValue());
+				}else if("NM_CATEGORIA".equals(dataName)){
+					c.setCategory(data.getValue());
 				}else{
 					continue;
 				}
 			}
 	
-			if(c.getName() != null && c.getName().trim() != "")
+			if(c.getName() != null && c.getName().trim() != "" && (c.getCategory().equals("CIDADE") || c.getCategory().equals("VILA")))
 				cities.add(c);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -77,9 +81,10 @@ public class CitiesParser implements KmlParseProgressListener {
 	public void onParseFinish(boolean altitudeWasDownloaded) {
 		try {
 		  PrintWriter writer = new PrintWriter(outputName, "UTF-8");
-
+		  int i = 0;
 		  for(City c: cities){
-			  writer.println(c.getName() + "," + c.getUf() + "," + c.getLatitude() + "," + c.getLongitude());
+			  i++;
+			  writer.println(i + "$" + c.getName() + "$" + c.getUf() + "$" + c.getMunicipio() + "$" + c.getLatitude() + "$" + c.getLongitude());
 		  }
 
 		  writer.close();
