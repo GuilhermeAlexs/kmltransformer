@@ -2,9 +2,11 @@ package models;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
+
 public class River {
 	private String name;
-	private List<TPLocation> locations = new ArrayList<>();
+	private List<Vector2D> locations = new ArrayList<>();
 	
 	public River() {
 	}
@@ -21,19 +23,19 @@ public class River {
 		this.name = name;
 	}
 
-	public List<TPLocation> getLocations() {
+	public List<Vector2D> getLocations() {
 		return locations;
 	}
 
-	public void setLocations(List<TPLocation> locations) {
+	public void setLocations(List<Vector2D> locations) {
 		this.locations = locations;
 	}
 
 	public void addLocation(double latitude, double longitude){
-		locations.add(new TPLocation(latitude,longitude));
+		locations.add(new Vector2D(latitude,longitude));
 	}
 	
-	public void addLocation(TPLocation loc){
+	public void addLocation(Vector2D loc){
 		locations.add(loc);
 	}
 }

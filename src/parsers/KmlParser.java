@@ -82,7 +82,7 @@ public class KmlParser {
 		
 		for(Coordinate c: coords){
 			TPLocation loc = ConverterUtils.coordinateToTPLocation(c);
-			r.addLocation(loc);
+			r.addLocation(loc.getLongitude(), loc.getLatitude());
 		}
 				
 		return r;
