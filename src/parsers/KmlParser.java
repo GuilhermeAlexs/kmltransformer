@@ -101,7 +101,7 @@ public class KmlParser {
 			for(Geometry g: listGeometries){
 				rivers.add(parseRiverFromLineString(p.getName(), (LineString) g));
 			}
-		}else if(geometry instanceof Polygon){
+		}else{
 			rivers.add(parseRiverFromLineString(p.getName(), (LineString) geometry));
 		}
 		

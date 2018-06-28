@@ -36,4 +36,14 @@ public class River {
 	public void addLocation(TPLocation loc){
 		locations.add(loc);
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		locations.forEach(l -> {
+			sb.append(l.getLatitude() + "," + l.getLongitude() + "\n");
+		});
+		
+		return sb.toString();
+	}
 }

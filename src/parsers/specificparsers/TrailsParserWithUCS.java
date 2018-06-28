@@ -201,6 +201,9 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 		@Override
 		public void onPreParse(int progressTotal) {
 			System.out.println("Filling Trails with Rivers");
+
+			System.out.println("Distância teste: " + distanceFromLineToPoint(new TPLocation(-13.151143,-47.568302), 
+					new TPLocation(-13.125157,-47.561166), new TPLocation(-14.166691,-47.847182)));
 		}
 
 		@Override
@@ -218,6 +221,19 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+		
+		private double distanceFromLineToPoint2(TPLocation a, TPLocation b, TPLocation c){ //A-B the line, C the point
+		     double lat1=a.getLatitude();
+		     double lon1=a.getLongitude();
+		     
+		     double lat2=b.getLatitude();
+		     double lon2=b.getLongitude();
+		     
+		     double lat3=c.getLatitude();
+		     double lon3=c.getLongitude();
+		     
+		     return 111*Math.abs((lat2 - lat1)*lon3 - (lon2 - lon1)*lat3 + lon2*lat1 - lat2*lon1)/Math.sqrt(((lat2 - lat1)*(lat2 - lat1)) + ((lon2 - lon1)*(lon2 - lon1)));
 		}
 		
 		private double distanceFromLineToPoint(TPLocation a, TPLocation b, TPLocation c){ //A-B the line, C the point
@@ -254,19 +270,27 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 		     double dLon = Math.toRadians(lon3 - lon1);
 
 		     double distanceAC = Math.acos(Math.sin(lat1Rads) * Math.sin(lat3Rads)+Math.cos(lat1Rads)*Math.cos(lat3Rads)*Math.cos(dLon)) * EARTH_RADIUS_KM;
-		     return (Math.abs(Math.asin(Math.sin(distanceAC/EARTH_RADIUS_KM)*Math.sin(Math.toRadians(bearing1)-Math.toRadians(bearing2))) * EARTH_RADIUS_KM));
+		     return (Math.abs(Math.asin(Math.sin(distanceAC)*Math.sin(Math.toRadians(bearing1)-Math.toRadians(bearing2))) * EARTH_RADIUS_KM));
 		}
 
 		private double distanceToRiver(River r, TPLocation loc){
 			double [] minDist = {Double.MAX_VALUE};
-
-			StreamEx.of(r.getLocations()).parallel().forPairs((curr,next) -> {
+			TPLocation [] rCurr = {null};
+			TPLocation [] rNext = {null};
+			
+			StreamEx.of(r.getLocations()).forPairs((curr,next) -> {
 				//Line seg = new Line(curr, next, 1);
 				double dist = distanceFromLineToPoint(curr, next, loc);
-				if(dist < minDist[0])
+				if(dist < minDist[0]){
+					rCurr[0] = curr;
+					rNext[0] = next;
 					minDist[0] = dist;
+				}
 			});
 
+			if(r.getName().equals("Rio Paranã"))
+				System.out.println(rCurr[0].getLatitude() + "," + rCurr[0].getLongitude() + "->" + rNext[0].getLatitude() + "," + rNext[0].getLongitude());
+		
 			return minDist[0];
 		}
 
@@ -274,26 +298,24 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 			double [] minDist = {Double.MAX_VALUE};
 			River [] river = {null};
 			
-			if(!loc.getName().contains("120")) return null;
+			if(!loc.getName().contains("Salto 120")) return null;
 			
-			finalRiverList.parallelStream().forEach(r -> {
+			finalRiverList.forEach(r -> {
 				double dist = distanceToRiver(r, loc);
 
 				//System.out.println("Distância de " + loc.getName() + " para " + r.getName() + " = " + dist);
-					if(loc.getName().contains("120") && r.getName().equals("Rio Preto")){
+					if(r.getName().equals("Rio Preto")){
 						System.out.println("Distância para " + r.getName() + " = " + dist);
 					}
 					
 					if(dist < minDist[0]) {
-						/*if(loc.getName().contains("120")){
-							System.out.println("Distância para " + r.getName() + " = " + dist);
-						}*/
+						//System.out.println("Distância para " + r.getName() + " = " + dist);
 						minDist[0] = dist;
 						river[0] = r;
 					}
 			});
 			//-18.244015,-48.99775900000001
-			System.out.println(loc.getName() + ":" + river[0].getName() + ":" + river[0].getLocations().get(0).getLatitude() + "," + river[0].getLocations().get(0).getLongitude());
+			System.out.println(loc.getName() + ":" + river[0].getName() + ":" + minDist[0]);
 			return river[0];
 		}
 
