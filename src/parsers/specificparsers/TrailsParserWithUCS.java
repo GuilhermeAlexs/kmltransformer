@@ -83,159 +83,6 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 		}
 	}
 	
-	class TrailWithRiverParser implements KmlParseProgressListener{
- 	    private List<River> finalRiverList = new ArrayList<River>();
- 	    
-		@Override
-		public void onPreParse(int progressTotal) {
-			System.out.println("Filling Trails with River");
-		}
-
-		@Override
-		public void onParseProgress(int progress) {
-		}
-
-		@Override
-		public void onParseFolder(Folder folder) {
-		}
-
-		@Override
-		public void onParsePlacemark(Placemark p) {
-			try {
-				finalRiverList.addAll(KmlParser.parsePlacemarkRiver(p, this));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
-		private double distanceToRiver(River r, TPLocation loc){
-			double minDist = Double.MAX_VALUE;
-			
-			StreamEx.of(r.getLocations()).forPairs((curr,next) -> {
-				Line seg = new Line(curr, next, 1);
-				double dist = seg.distance(new Vector2D(loc.getLongitude(), loc.getLatitude()));
-				if(dist < minDist)
-					minDist = dist;
-			});
-			
-			return minDist;
-		}
-		
-		private River getRiver(TPLocation loc) {
-			double minDist = Double.MAX_VALUE;
-			River river = null;
-			
-			finalRiverList.forEach(r -> {
-				double dist = distanceToRiver(r, loc);
-				if(dist < minDist) {
-					minDist = dist;
-					river = r;
-				}
-			});
-			
-			return river;
-		}
-
-		private TPLocation getLocWithUC(List<City> cities, TPLocation loc){
-			String ucName = finalRiverList
-					.stream    ()
-					.parallel  ()
-					.filter    (uc -> isInside(uc,loc))
-					.map	   (uc -> uc.getName())
-					.findFirst ()
-					.orElse    (null);
-
-			loc.setUc(ucName);
-
-			double minD = Double.MAX_VALUE;
-			
-			for(City c: cities){
-				double d = GeoUtils.computeDistance(loc.getLatitude(), loc.getLongitude(), 
-						Double.parseDouble(c.getLatitude()), Double.parseDouble(c.getLongitude()));
-				
-				if(d < minD){
-					minD = d;
-					loc.setNearestCityId(c.getId());
-					loc.setNearDistance(d);
-					
-					if(loc.getType() == TrailType.UNKNOWN){
-						String explName = ConverterUtils.toShortUFName(c.getUf()) + loc.getId();
-						loc.setName(explName);
-					}
-				}
-			}
-			
-			return loc;
-		}
-
-		private void printToFile(PrintWriter writer, TPLocation loc){
-			writer.println(loc.getId() + "$" + loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
-					"$" + loc.getUc() + "$" + loc.getType().getValue() + "$" + TrailEnvironment.WATERFALL.getValue() +
-					"$" + loc.getNearestCityId() + "$" + Math.round(loc.getNearDistance()));
-		}		
-
-		private List<City> getCities(){
-			List<City> cities = new ArrayList<>();
-			boolean stop[] = new boolean[1];
-			stop[0] = false;
-			
-			try (Stream<String> stream = Files.lines(Paths.get("citiesV2.csv"))) {
-				stream.forEach(line -> {
-					if(!stop[0]){
-						String f [] = line.split(",");
-						
-						City c = new City();
-						c.setId(f[0]);
-						c.setName(f[1]);
-						c.setUf(f[2]);
-						c.setLatitude(f[4]);
-						c.setLongitude(f[5]);
-						
-						cities.add(c);
-	
-						/*if(f[0].equals("10078"))
-							stop[0] = true;*/
-					}
-				});
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-			return cities;
-		}
-		
-		@Override
-		public void onParseFinish(boolean altitudeWasDownloaded) {
-			try{
-				PrintWriter writer = new PrintWriter(outputName, "UTF-8");
-				
-				List<City> cities = getCities();
-				
-				locs.stream  ()
-					.parallel()
-					.map	 (loc -> getLocWithUC(cities, loc))
-					.forEach (loc -> printToFile(writer, loc));
-
-				writer.close();
-
-				System.out.println("Foram analisadas " + nEntries + ".");
-
-				/*
-					FileOutputStream fout = new FileOutputStream(outputName);
-					ObjectOutputStream oos = new ObjectOutputStream(fout);
-					ObjectMapper mapper = new ObjectMapper();
-					String resp = mapper.writeValueAsString(locs);
-					System.out.println(resp);
-					oos.writeObject(resp);
-					oos.close();
-				*/
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
 	class TrailWithUCSParser implements KmlParseProgressListener{
  	    private List<ConservationUnit> finalUCList = new ArrayList<ConservationUnit>();
  	    
@@ -296,13 +143,7 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 			
 			return loc;
 		}
-
-		private void printToFile(PrintWriter writer, TPLocation loc){
-			writer.println(loc.getId() + "$" + loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
-					"$" + loc.getUc() + "$" + loc.getType().getValue() + "$" + TrailEnvironment.WATERFALL.getValue() +
-					"$" + loc.getNearestCityId() + "$" + Math.round(loc.getNearDistance()));
-		}		
-
+		
 		private List<City> getCities(){
 			List<City> cities = new ArrayList<>();
 			boolean stop[] = new boolean[1];
@@ -336,29 +177,151 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 		
 		@Override
 		public void onParseFinish(boolean altitudeWasDownloaded) {
+			try {
+				List<City> cities = getCities();
+			
+				locs.stream  ()
+					.parallel()
+					.forEach (loc -> getLocWithUC(cities, loc));
+
+				finalUCList.clear();
+				File file = new File("rios.kml");
+		 	    Kml kml = Kml.unmarshal(KMLUtils.openKml(file));
+		 	    
+				KmlParser.parseKml(kml, new TrailWithRiverParser());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	class TrailWithRiverParser implements KmlParseProgressListener{
+ 	    private List<River> finalRiverList = new ArrayList<River>();
+ 	    
+		@Override
+		public void onPreParse(int progressTotal) {
+			System.out.println("Filling Trails with Rivers");
+		}
+
+		@Override
+		public void onParseProgress(int progress) {
+		}
+
+		@Override
+		public void onParseFolder(Folder folder) {
+		}
+
+		@Override
+		public void onParsePlacemark(Placemark p) {
+			try {
+				finalRiverList.addAll(KmlParser.parsePlacemarkRiver(p, this));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		private double distanceFromLineToPoint(TPLocation a, TPLocation b, TPLocation c){ //A-B the line, C the point
+		     double lat1=a.getLatitude();
+		     double lon1=a.getLongitude();
+		     
+		     double lat2=b.getLatitude();
+		     double lon2=b.getLongitude();
+		     
+		     double lat3=c.getLatitude();
+		     double lon3=c.getLongitude();
+		     
+		     double EARTH_RADIUS_KM=6371;
+		     
+		     double sinLat1 = Math.sin(lat1);
+		     double sinLat2 = Math.sin(lat2);
+
+		     double cosLat1 = Math.cos(lat1);
+		     double cosLat2 = Math.cos(lat2);
+		     double cosLat3 = Math.cos(lat3);
+		     
+		     double y = Math.sin(lon3-lon1)*cosLat3;
+		     double x = cosLat1 * Math.sin(lat3) - sinLat1 * cosLat3 * Math.cos(lat3 - lat1);
+		     double bearing1=Math.toDegrees(Math.atan2(y,x));
+		     bearing1=360-(bearing1+360%360);
+
+		     double y2 = Math.sin(lon2 - lon1) * cosLat2;
+		     double x2 = cosLat1 * sinLat2 - sinLat1 * cosLat2 * Math.cos(lat2 - lat1);
+		     double bearing2 = Math.toDegrees(Math.atan2(y2, x2));
+		     bearing2 = 360 - (bearing2 + 360 % 360);
+
+		     double lat1Rads = Math.toRadians(lat1);
+		     double lat3Rads = Math.toRadians(lat3);
+		     double dLon = Math.toRadians(lon3 - lon1);
+
+		     double distanceAC = Math.acos(Math.sin(lat1Rads) * Math.sin(lat3Rads)+Math.cos(lat1Rads)*Math.cos(lat3Rads)*Math.cos(dLon)) * EARTH_RADIUS_KM;
+		     return (Math.abs(Math.asin(Math.sin(distanceAC/EARTH_RADIUS_KM)*Math.sin(Math.toRadians(bearing1)-Math.toRadians(bearing2))) * EARTH_RADIUS_KM));
+		}
+
+		private double distanceToRiver(River r, TPLocation loc){
+			double [] minDist = {Double.MAX_VALUE};
+
+			StreamEx.of(r.getLocations()).parallel().forPairs((curr,next) -> {
+				//Line seg = new Line(curr, next, 1);
+				double dist = distanceFromLineToPoint(curr, next, loc);
+				if(dist < minDist[0])
+					minDist[0] = dist;
+			});
+
+			return minDist[0];
+		}
+
+		private River getRiver(TPLocation loc) {
+			double [] minDist = {Double.MAX_VALUE};
+			River [] river = {null};
+			
+			if(!loc.getName().contains("120")) return null;
+			
+			finalRiverList.parallelStream().forEach(r -> {
+				double dist = distanceToRiver(r, loc);
+
+				//System.out.println("Distância de " + loc.getName() + " para " + r.getName() + " = " + dist);
+					if(loc.getName().contains("120") && r.getName().equals("Rio Preto")){
+						System.out.println("Distância para " + r.getName() + " = " + dist);
+					}
+					
+					if(dist < minDist[0]) {
+						/*if(loc.getName().contains("120")){
+							System.out.println("Distância para " + r.getName() + " = " + dist);
+						}*/
+						minDist[0] = dist;
+						river[0] = r;
+					}
+			});
+			//-18.244015,-48.99775900000001
+			System.out.println(loc.getName() + ":" + river[0].getName() + ":" + river[0].getLocations().get(0).getLatitude() + "," + river[0].getLocations().get(0).getLongitude());
+			return river[0];
+		}
+
+		private void printToFile(PrintWriter writer, TPLocation loc){
+			writer.println(loc.getId() + "$" + loc.getName() + "$" + loc.getLatitude() + "$" + loc.getLongitude() + 
+					"$" + loc.getUc() + "$" + loc.getType().getValue() + "$" + TrailEnvironment.WATERFALL.getValue() +
+					"$" + loc.getNearestCityId() + "$" + Math.round(loc.getNearDistance()) + "$" + loc.getRiver());
+		}
+		
+		@Override
+		public void onParseFinish(boolean altitudeWasDownloaded) {
 			try{
 				PrintWriter writer = new PrintWriter(outputName, "UTF-8");
 				
-				List<City> cities = getCities();
-				
 				locs.stream  ()
 					.parallel()
-					.map	 (loc -> getLocWithUC(cities, loc))
-					.forEach (loc -> printToFile(writer, loc));
+					.forEach (loc -> {
+						River r = getRiver(loc);
+						
+						if(r != null)
+							loc.setRiver(r.getName());
+						
+						printToFile(writer, loc);
+					});
 
 				writer.close();
 
 				System.out.println("Foram analisadas " + nEntries + ".");
-
-				/*
-					FileOutputStream fout = new FileOutputStream(outputName);
-					ObjectOutputStream oos = new ObjectOutputStream(fout);
-					ObjectMapper mapper = new ObjectMapper();
-					String resp = mapper.writeValueAsString(locs);
-					System.out.println(resp);
-					oos.writeObject(resp);
-					oos.close();
-				*/
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

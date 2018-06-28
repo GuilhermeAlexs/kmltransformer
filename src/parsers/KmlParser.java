@@ -81,8 +81,7 @@ public class KmlParser {
 		List<Coordinate> coords = lineString.getCoordinates();
 		
 		for(Coordinate c: coords){
-			TPLocation loc = ConverterUtils.coordinateToTPLocation(c);
-			r.addLocation(loc.getLongitude(), loc.getLatitude());
+			r.addLocation(ConverterUtils.coordinateToTPLocation(c));
 		}
 				
 		return r;
@@ -91,6 +90,9 @@ public class KmlParser {
 	public static List<River> parsePlacemarkRiver(Placemark p, KmlParseProgressListener listener) throws Exception{
 		Geometry geometry = p.getGeometry();
 		List<River> rivers = new ArrayList<>();
+		
+		/*if(p.getName().equals("Ribeirão das Antas"))
+			System.out.println("io");*/
 		
 		if(geometry instanceof MultiGeometry){
 			MultiGeometry mGeo = (MultiGeometry) p.getGeometry();

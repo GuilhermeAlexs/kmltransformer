@@ -23,6 +23,8 @@ public class TPLocation implements Serializable{
 	@JsonProperty
 	private String uc;
 	@JsonProperty
+	private String river;
+	@JsonProperty
 	private TrailEnvironment environment;
 	@JsonIgnore
 	private double nearDistance;
@@ -143,6 +145,12 @@ public class TPLocation implements Serializable{
 	public void setNearestCityId(String nearestCityId) {
 		this.nearestCityId = nearestCityId;
 	}
-	
-	
+
+	public String getRiver() {
+		return river;
+	}
+
+	public void setRiver(String river) {
+		this.river = river;
+	}
 }
