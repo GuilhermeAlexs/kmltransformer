@@ -18,6 +18,7 @@ import models.ConservationUnit;
 import models.River;
 import models.TPLocation;
 import models.TrailType;
+import one.util.streamex.StreamEx;
 import utils.ConverterUtils;
 import utils.KMLUtils;
 
@@ -74,14 +75,31 @@ public class KmlParser {
 		return cUnit;
 	}
 	
+	public static List<TPLocation> makeDetailed(LineString line){
+		List<Coordinate> coords = new ArrayList<>();
+		List<TPLocation> coordsFinal = new ArrayList<>();
+
+		coordsFinal.add(ConverterUtils.coordinateToTPLocation(line.getCoordinates().get(0)));
+		
+		StreamEx.of(line.getCoordinates()).forPairs((curr,next) -> {
+			TPLocation a = ConverterUtils.coordinateToTPLocation(curr);
+			TPLocation b = ConverterUtils.coordinateToTPLocation(next);
+			
+			coordsFinal.add(new TPLocation((a.getLatitude() + b.getLatitude())/2d, (a.getLongitude() + b.getLongitude())/2d));
+			coordsFinal.add(b);
+		});
+		
+		return coordsFinal;
+	}
+	
 	public static River parseRiverFromLineString(String name, LineString lineString){
 		River r = new River();
 		r.setName(name);
 		
-		List<Coordinate> coords = lineString.getCoordinates();
+		List<TPLocation> coords = makeDetailed(lineString);
 		
-		for(Coordinate c: coords){
-			r.addLocation(ConverterUtils.coordinateToTPLocation(c));
+		for(TPLocation c: coords){
+			r.addLocation(c);
 		}
 				
 		return r;
@@ -90,9 +108,6 @@ public class KmlParser {
 	public static List<River> parsePlacemarkRiver(Placemark p, KmlParseProgressListener listener) throws Exception{
 		Geometry geometry = p.getGeometry();
 		List<River> rivers = new ArrayList<>();
-		
-		/*if(p.getName().equals("Ribeirão das Antas"))
-			System.out.println("io");*/
 		
 		if(geometry instanceof MultiGeometry){
 			MultiGeometry mGeo = (MultiGeometry) p.getGeometry();

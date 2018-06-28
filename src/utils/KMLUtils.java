@@ -19,7 +19,7 @@ public class KMLUtils {
  	    str = str.replace("xmlns=\"http://earth.google.com/kml/2.2\"", "xmlns=\"http://www.opengis.net/kml/2.2\"" );
  	    return new ByteArrayInputStream(str.getBytes( "ISO-8859-1" ));
 	}
-	
+
 	public static long getIDFromPlacemarck(Placemark p){
 		ExtendedData extData = p.getExtendedData();
 		List<SchemaData> schDataList = extData.getSchemaData();

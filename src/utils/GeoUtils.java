@@ -49,10 +49,10 @@ public class GeoUtils {
         double deltaLon = Math.toRadians(lon2 - lon1); 
  
         // a is the square of half the chord length between the points 
-        double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) 
-                + Math.cos(Math.toRadians(lat1)) 
-                * Math.cos(Math.toRadians(lat2)) * Math.sin(deltaLon / 2) 
-                * Math.sin(deltaLon / 2); 
+        double a = Math.pow(Math.sin(deltaLat / 2),2) 
+                 + Math.cos(Math.toRadians(lat1)) 
+                 * Math.cos(Math.toRadians(lat2)) 
+                 * Math.pow(Math.sin(deltaLon / 2),2); 
  
         // c is the angular distance in radians 
         double c = 2 * Math.asin(Math.min(1, Math.sqrt(a))); 
