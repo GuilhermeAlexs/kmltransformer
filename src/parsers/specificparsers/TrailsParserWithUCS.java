@@ -27,6 +27,9 @@ import utils.GeoUtils;
 import utils.KMLUtils;
 
 public class TrailsParserWithUCS implements KmlParseProgressListener {
+	private final String UCS_FILE = "ucs.kml";
+	private final String CITIES_FILE = "/home/guilherme/eclipse-workspace/kmltransformer/citiesV2.csv";
+	
 	private List<TPLocation> locs;
 	private String outputName;
     private long nEntries = 0;
@@ -58,7 +61,7 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 			if(loc.getLatitude() == 0 && loc.getLongitude() == 0)
 				return;
 
-			if(loc != null && loc.getName() != null && loc.getType() == TrailType.WELL_KNOWN){
+			if(loc != null && loc.getName() != null){
 				locs.add(loc);
 				nEntries++;
 			}
@@ -70,7 +73,9 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 	@Override
 	public void onParseFinish(boolean altitudeWasDownloaded) {
 		try {
-			File file = new File("ucs.kml");
+			System.out.println("---------------- Filling Trails with UC ----------------");
+			System.out.println("Loading " + UCS_FILE + "...");
+			File file = new File(UCS_FILE);
 	 	    Kml kml = Kml.unmarshal(KMLUtils.openKml(file));
 
 			KmlParser.parseKml(kml, new TrailWithUCSParser());
@@ -84,7 +89,7 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 
  	    @Override
 		public void onPreParse(int progressTotal) {
-			System.out.println("Filling Trails with UC");
+			System.out.println("Loading finished.");
 		}
 
 		@Override
@@ -108,10 +113,10 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 			return uc.getPolygon().contains(new Point(loc.getLatitude(), loc.getLongitude()));
 		}
 
-		private TPLocation getLocWithUC(List<City> cities, TPLocation loc){
+		private TPLocation getLocWithUC(List<City> cities, TPLocation loc){			
 			String ucName = finalUCList
 					.stream    ()
-					.parallel()
+					.parallel  ()
 					.filter    (uc -> isInside(uc,loc))
 					.map	   (uc -> uc.getName())
 					.findFirst ()
@@ -144,8 +149,9 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 			List<City> cities = new ArrayList<>();
 			boolean stop[] = new boolean[1];
 			stop[0] = false;
-
-			try (Stream<String> stream = Files.lines(Paths.get("/home/guilherme/eclipse-workspace/kmltransformer/citiesV2.csv"))) {
+			
+			System.out.println("Loading " + CITIES_FILE + "...");
+			try (Stream<String> stream = Files.lines(Paths.get(CITIES_FILE))) {
 				stream.forEach(line -> {
 					if(!stop[0]){
 						String f [] = line.split(",");
@@ -174,13 +180,17 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 		@Override
 		public void onParseFinish(boolean altitudeWasDownloaded) {
 			try {
+
 				List<City> cities = getCities();
 
+				System.out.println("Filling trail with UC and City...");
 				locs.stream  ()
 					.parallel()
 					.forEach (loc -> getLocWithUC(cities, loc));
 
 				finalUCList.clear();
+
+				System.out.println("---------------- Filling Trails with Rivers ----------------");
 				File file = new File("rios.kml");
 		 	    Kml kml = Kml.unmarshal(KMLUtils.openKml(file));
 
@@ -190,13 +200,13 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 			}
 		}
 	}
-	
+
 	class TrailWithRiverParser implements KmlParseProgressListener{
  	    private List<River> finalRiverList = new ArrayList<River>();
 
 		@Override
 		public void onPreParse(int progressTotal) {
-			System.out.println("Filling Trails with Rivers");
+			System.out.println("Loading finished. Parsing geometries...");
 		}
 
 		@Override
@@ -228,16 +238,6 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 				if(dist > 500000)
 					break;
 			}
-
-			/*StreamEx.of(r.getLocations()).forPairs((curr,next) -> {
-				//Line seg = new Line(curr, next, 1);
-				double dist = distanceFromLineToPoint3(curr, next, loc);
-				if(dist < minDist[0]){
-					rCurr[0] = curr;
-					rNext[0] = next;
-					minDist[0] = dist;
-				}
-			});*/
 
 			return minDist[0];
 		}
@@ -272,6 +272,7 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 				PrintWriter writer = new PrintWriter(outputName, "UTF-8");
 				int [] riverToWaterfallCounter = {0};
 
+				System.out.println("Filling trails with river...");
 				locs.stream  ()
 					.parallel()
 					.forEach (loc -> {
@@ -286,9 +287,11 @@ public class TrailsParserWithUCS implements KmlParseProgressListener {
 					});
 
 				writer.close();
-
-				System.out.println("Foram analisadas " + nEntries + " trilhas.");
-				System.out.println("Quantidade de trilhas com rio: " + riverToWaterfallCounter[0]);
+				
+				System.out.println("Done!");
+				System.out.println("---------------- Statistics ----------------");
+				System.out.println("Number of Trails: " + nEntries);
+				System.out.println("Trails with rivers: " + riverToWaterfallCounter[0]);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
