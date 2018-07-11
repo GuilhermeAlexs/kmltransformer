@@ -28,7 +28,7 @@ import utils.KMLUtils;
 
 public class TrailsParserWithUCS implements KmlParseProgressListener {
 	private final String UCS_FILE = "ucs.kml";
-	private final String CITIES_FILE = "/home/guilherme/eclipse-workspace/kmltransformer/citiesV2.csv";
+	private final String CITIES_FILE = "citiesV2.csv";
 	
 	private List<TPLocation> locs;
 	private String outputName;
